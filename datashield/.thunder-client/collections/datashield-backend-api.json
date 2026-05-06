@@ -1,0 +1,143 @@
+﻿{
+  "client": "Thunder Client",
+  "collectionName": "DataShield Backend API",
+  "dateExported": "2026-05-06T00:00:00.000Z",
+  "version": "1.1",
+  "folders": [],
+  "requests": [
+    {
+      "_id": "req_health_check",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "1. Health Check",
+      "url": "http://localhost:5000/api/health",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [],
+      "params": [],
+      "tests": [],
+      "description": "Use this first to verify the backend is running on port 5000."
+    },
+    {
+      "_id": "req_register_user",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "2. Register User",
+      "url": "http://localhost:5000/api/auth/register",
+      "method": "POST",
+      "sortNum": 20000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"Mukesh\",\n  \"email\": \"mukesh@datashield.com\",\n  \"password\": \"123456\",\n  \"role\": \"admin\"\n}",
+        "form": []
+      },
+      "tests": [],
+      "description": "Creates a new user account. Run this once before login."
+    },
+    {
+      "_id": "req_login_user",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "3. Login User",
+      "url": "http://localhost:5000/api/auth/login",
+      "method": "POST",
+      "sortNum": 30000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"email\": \"mukesh@datashield.com\",\n  \"password\": \"123456\"\n}",
+        "form": []
+      },
+      "tests": [],
+      "description": "Logs in the user and returns JWT token. Copy token into Thunder Client environment variable named token."
+    },
+    {
+      "_id": "req_get_current_user",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "4. Get Current User",
+      "url": "http://localhost:5000/api/auth/me",
+      "method": "GET",
+      "sortNum": 40000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": [],
+      "description": "Tests protected auth route. Requires token variable from login response."
+    },
+    {
+      "_id": "req_create_scan",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "5. Create Scan",
+      "url": "http://localhost:5000/api/scans",
+      "method": "POST",
+      "sortNum": 50000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "params": [],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"targetUrl\": \"https://example.com\"\n}",
+        "form": []
+      },
+      "tests": [],
+      "description": "Creates a new scan for the logged-in user. Requires Bearer token."
+    },
+    {
+      "_id": "req_get_all_scans",
+      "colId": "datashield_backend_collection",
+      "containerId": "",
+      "name": "6. Get All Scans",
+      "url": "http://localhost:5000/api/scans",
+      "method": "GET",
+      "sortNum": 60000,
+      "created": "2026-05-06T00:00:00.000Z",
+      "modified": "2026-05-06T00:00:00.000Z",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Bearer {{token}}"
+        }
+      ],
+      "params": [],
+      "tests": [],
+      "description": "Fetches all scans created by the authenticated user, newest first."
+    }
+  ]
+}

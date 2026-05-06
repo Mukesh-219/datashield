@@ -1,34 +1,105 @@
-const Scan = require('../models/Scan');
-const Alert = require('../models/Alert');
+﻿import mongoose from "mongoose";
+import Scan from "../models/Scan.js";
 
-exports.createScan = async (req, res) => {
+// Small helper to validate URL format safely
+const isValidUrl = (value) => {
   try {
-    const { targetUrl } = req.body;
-    const scan = new Scan({
-      targetUrl,
-      initiatedBy: req.user.userId,
-      status: 'running'
-    });
-    await scan.save();
-
-    // Simulate scanning process (in real implementation, this would be more complex)
-    setTimeout(async () => {
-      // Update scan status to completed
-      scan.status = 'completed';
-      await scan.save();
-    }, 5000); // Simulate 5 seconds scan
-
-    res.status(201).json(scan);
+    const parsedUrl = new URL(value);
+    return parsedUrl.protocol === "http:" || parsedUrl.protocol === "https:";
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    return false;
   }
 };
 
-exports.getScans = async (req, res) => {
+// @desc    Create a new scan
+// @route   POST /api/scans
+// @access  Private
+const createScan = async (req, res, next) => {
   try {
-    const scans = await Scan.find({ initiatedBy: req.user.userId }).sort({ createdAt: -1 });
-    res.json(scans);
+    const { targetUrl } = req.body;
+
+    if (!targetUrl) {
+      return res.status(400).json({
+        success: false,
+        message: "targetUrl is required",
+      });
+    }
+
+    if (!isValidUrl(targetUrl)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a valid URL starting with http:// or https://",
+      });
+    }
+
+    const scan = await Scan.create({
+      targetUrl,
+      initiatedBy: req.user._id,
+    });
+
+    return res.status(201).json({
+      success: true,
+      scan,
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error' });
+    next(error);
   }
+};
+
+// @desc    Get all scans for authenticated user
+// @route   GET /api/scans
+// @access  Private
+const getScans = async (req, res, next) => {
+  try {
+    const scans = await Scan.find({ initiatedBy: req.user._id }).sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      success: true,
+      scans,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get one scan by id for authenticated user
+// @route   GET /api/scans/:id
+// @access  Private
+const getScanById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Return clean validation error for malformed MongoDB ids
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid scan ID format",
+      });
+    }
+
+    const scan = await Scan.findOne({
+      _id: id,
+      initiatedBy: req.user._id,
+    });
+
+    if (!scan) {
+      return res.status(404).json({
+        success: false,
+        message: "Scan not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      scan,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export default {
+  createScan,
+  getScans,
+  getScanById,
 };
