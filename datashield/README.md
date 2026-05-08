@@ -153,7 +153,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact
 
 - **Authors**: Mukesh, Jigisha-Diksha
-- **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219)
+- **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219) and [@Jigisha-Diksha](https://github.com/Jigisha-Diksha)
 - **Project Link**: [https://github.com/Mukesh-219/datashield](https://github.com/Mukesh-219/datashield)
 
 ---
