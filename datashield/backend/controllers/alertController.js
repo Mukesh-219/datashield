@@ -2,6 +2,7 @@
 import Alert from "../models/Alert.js";
 import Scan from "../models/Scan.js";
 import calculateRiskData from "../services/riskScoringService.js";
+import { getSocket } from "../socket/socket.js";
 
 // @desc    Create a new alert for a scan
 // @route   POST /api/alerts
@@ -10,7 +11,6 @@ const createAlert = async (req, res, next) => {
   try {
     const { scan, attackType, payload, endpoint, mlConfidence } = req.body;
 
-    // Validate required fields
     if (!scan || !attackType || !payload || !endpoint || mlConfidence === undefined) {
       return res.status(400).json({
         success: false,
@@ -32,7 +32,6 @@ const createAlert = async (req, res, next) => {
       });
     }
 
-    // Validate scan ownership: user can only create alerts for their own scans
     const targetScan = await Scan.findOne({
       _id: scan,
       initiatedBy: req.user._id,
@@ -45,7 +44,6 @@ const createAlert = async (req, res, next) => {
       });
     }
 
-    // Compute risk score + severity using reusable scoring service
     const { riskScore, severity } = calculateRiskData(attackType, mlConfidence);
 
     const alert = await Alert.create({
@@ -58,17 +56,20 @@ const createAlert = async (req, res, next) => {
       severity,
     });
 
-    // Keep scan summary fields updated
     targetScan.alertCount += 1;
     targetScan.maxRiskScore = Math.max(targetScan.maxRiskScore, riskScore);
     await targetScan.save();
+
+    const io = getSocket();
+    if (io) {
+      io.emit("alert:created", { alert });
+    }
 
     return res.status(201).json({
       success: true,
       alert,
     });
   } catch (error) {
-    // Map unsupported attack type errors to a clear validation response
     if (error.message === "Unsupported attack type for risk scoring") {
       return res.status(400).json({
         success: false,
@@ -80,9 +81,6 @@ const createAlert = async (req, res, next) => {
   }
 };
 
-// @desc    Get alerts for a specific scan (only if user owns that scan)
-// @route   GET /api/alerts/scan/:scanId
-// @access  Private
 const getAlertsByScan = async (req, res, next) => {
   try {
     const { scanId } = req.params;
@@ -117,18 +115,14 @@ const getAlertsByScan = async (req, res, next) => {
   }
 };
 
-// @desc    Get all alerts belonging to authenticated user's scans
-// @route   GET /api/alerts
-// @access  Private
 const getAllAlerts = async (req, res, next) => {
   try {
-    // Find all scan ids created by this user
     const userScans = await Scan.find({ initiatedBy: req.user._id }).select("_id");
     const scanIds = userScans.map((item) => item._id);
 
     const alerts = await Alert.find({ scan: { $in: scanIds } })
       .sort({ createdAt: -1 })
-      .populate("scan", "targetUrl status initiatedBy");
+      .populate("scan", "targetUrl status initiatedBy endpoint payload");
 
     return res.status(200).json({
       success: true,

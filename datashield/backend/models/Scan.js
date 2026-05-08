@@ -9,6 +9,34 @@ const scanSchema = new mongoose.Schema(
       trim: true,
     },
 
+    // Optional request endpoint scanned
+    endpoint: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Optional payload used for ML analysis
+    payload: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    // Stores last ML classification for this scan
+    mlPrediction: {
+      type: String,
+      default: "",
+    },
+
+    // Stores last ML confidence score for this scan
+    mlConfidence: {
+      type: Number,
+      min: 0,
+      max: 1,
+      default: 0,
+    },
+
     // Current processing state of the scan
     status: {
       type: String,

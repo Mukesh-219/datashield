@@ -1,7 +1,10 @@
 ﻿import mongoose from "mongoose";
 import Scan from "../models/Scan.js";
+import Alert from "../models/Alert.js";
+import calculateRiskData from "../services/riskScoringService.js";
+import mlService from "../services/mlService.js";
+import { getSocket } from "../socket/socket.js";
 
-// Small helper to validate URL format safely
 const isValidUrl = (value) => {
   try {
     const parsedUrl = new URL(value);
@@ -11,12 +14,20 @@ const isValidUrl = (value) => {
   }
 };
 
-// @desc    Create a new scan
-// @route   POST /api/scans
-// @access  Private
+const mapMlPredictionToAttackType = (prediction) => {
+  const normalized = String(prediction || "").trim();
+
+  if (normalized === "SQLi") return "SQLi";
+  if (normalized === "XSS") return "Reflected XSS";
+  if (normalized === "Suspicious") return "Suspicious";
+  if (normalized === "Normal") return null;
+
+  return null;
+};
+
 const createScan = async (req, res, next) => {
   try {
-    const { targetUrl } = req.body;
+    const { targetUrl, payload, endpoint } = req.body;
 
     if (!targetUrl) {
       return res.status(400).json({
@@ -34,21 +45,71 @@ const createScan = async (req, res, next) => {
 
     const scan = await Scan.create({
       targetUrl,
+      endpoint: endpoint || "",
+      payload: payload || "",
       initiatedBy: req.user._id,
+      status: "queued",
     });
+
+    let mlAnalysis = null;
+
+    if (typeof payload === "string" && payload.trim()) {
+      try {
+        mlAnalysis = await mlService.predictPayloadThreat(payload);
+
+        const attackType = mapMlPredictionToAttackType(mlAnalysis.prediction);
+        const boundedConfidence = Number.isFinite(mlAnalysis.confidence)
+          ? Math.max(0, Math.min(1, mlAnalysis.confidence))
+          : 0;
+
+        scan.mlPrediction = String(mlAnalysis.prediction || "");
+        scan.mlConfidence = boundedConfidence;
+        scan.status = "completed";
+
+        if (attackType) {
+          const { riskScore, severity } = calculateRiskData(attackType, boundedConfidence);
+
+          const alert = await Alert.create({
+            scan: scan._id,
+            attackType,
+            payload,
+            endpoint: endpoint || targetUrl,
+            mlConfidence: boundedConfidence,
+            riskScore,
+            severity,
+          });
+
+          scan.alertCount += 1;
+          scan.maxRiskScore = Math.max(scan.maxRiskScore, riskScore);
+
+          const io = getSocket();
+          if (io) {
+            io.emit("alert:created", { alert });
+          }
+        }
+
+        await scan.save();
+      } catch (mlError) {
+        scan.status = "failed";
+        await scan.save();
+
+        mlAnalysis = {
+          success: false,
+          message: mlError.message,
+        };
+      }
+    }
 
     return res.status(201).json({
       success: true,
       scan,
+      mlAnalysis,
     });
   } catch (error) {
     next(error);
   }
 };
 
-// @desc    Get all scans for authenticated user
-// @route   GET /api/scans
-// @access  Private
 const getScans = async (req, res, next) => {
   try {
     const scans = await Scan.find({ initiatedBy: req.user._id }).sort({ createdAt: -1 });
@@ -62,14 +123,10 @@ const getScans = async (req, res, next) => {
   }
 };
 
-// @desc    Get one scan by id for authenticated user
-// @route   GET /api/scans/:id
-// @access  Private
 const getScanById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    // Return clean validation error for malformed MongoDB ids
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,

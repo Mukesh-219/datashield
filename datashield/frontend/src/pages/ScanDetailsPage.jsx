@@ -1,0 +1,189 @@
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
+import Sidebar from "../components/Sidebar";
+import TopNavbar from "../components/TopNavbar";
+import SeverityBadge from "../components/SeverityBadge";
+import { getAlertsByScan, getScanById } from "../services/dashboardService";
+
+const ScanDetailsPage = () => {
+  const { id } = useParams();
+  const [scan, setScan] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const reportRef = useRef(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      setError("");
+
+      try {
+        const [scanResponse, alertResponse] = await Promise.all([getScanById(id), getAlertsByScan(id)]);
+        setScan(scanResponse.scan || null);
+        setAlerts(alertResponse.alerts || []);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to load scan details");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [id]);
+
+  const severitySummary = useMemo(() => {
+    return alerts.reduce(
+      (acc, alert) => {
+        const key = alert.severity || "informational";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      },
+      { informational: 0, medium: 0, high: 0, critical: 0 }
+    );
+  }, [alerts]);
+
+  const handleDownloadReport = async () => {
+    if (!reportRef.current) return;
+
+    try {
+      setPdfLoading(true);
+
+      const canvas = await html2canvas(reportRef.current, {
+        backgroundColor: "#05070d",
+        scale: 2,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF("p", "mm", "a4");
+
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      const pageHeight = pdf.internal.pageSize.getHeight();
+
+      const imgWidth = pageWidth - 10;
+      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+      let position = 5;
+      let remainingHeight = imgHeight;
+
+      pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
+      remainingHeight -= pageHeight;
+
+      while (remainingHeight > 0) {
+        position = remainingHeight - imgHeight + 5;
+        pdf.addPage();
+        pdf.addImage(imgData, "PNG", 5, position, imgWidth, imgHeight);
+        remainingHeight -= pageHeight;
+      }
+
+      pdf.save(`datashield-scan-report-${id}.pdf`);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen grid place-items-center text-cyan-300">Loading scan details...</div>;
+  }
+
+  return (
+    <div className="min-h-screen bg-cyber-950 text-slate-100 lg:flex">
+      <Sidebar />
+
+      <main className="flex-1 p-4 lg:p-8">
+        <TopNavbar />
+
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <Link to="/dashboard" className="text-sm text-cyan-300 hover:text-cyan-200">
+            Back to Dashboard
+          </Link>
+
+          <button
+            onClick={handleDownloadReport}
+            disabled={pdfLoading || !scan}
+            className="rounded-md border border-cyan-400/50 px-4 py-2 text-sm text-cyan-200 hover:bg-cyber-800 disabled:opacity-60"
+          >
+            {pdfLoading ? "Generating PDF..." : "Download Report"}
+          </button>
+        </div>
+
+        {error ? (
+          <p className="rounded-md border border-red-500/40 bg-red-950/40 p-3 text-red-300">{error}</p>
+        ) : null}
+
+        {scan ? (
+          <div ref={reportRef} className="space-y-6">
+            <section className="rounded-xl border border-cyan-500/20 bg-cyber-900/70 p-5">
+              <h2 className="mb-4 text-xl font-semibold text-cyan-200">Scan Details</h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <p><span className="text-slate-400">Target URL:</span> {scan.targetUrl}</p>
+                <p><span className="text-slate-400">Endpoint:</span> {scan.endpoint || "-"}</p>
+                <p><span className="text-slate-400">Payload:</span> {scan.payload || "-"}</p>
+                <p><span className="text-slate-400">Status:</span> <span className="capitalize">{scan.status}</span></p>
+                <p><span className="text-slate-400">Alert Count:</span> {scan.alertCount}</p>
+                <p><span className="text-slate-400">Max Risk Score:</span> {Number(scan.maxRiskScore || 0).toFixed(2)}</p>
+                <p><span className="text-slate-400">ML Prediction:</span> {scan.mlPrediction || "Not available"}</p>
+                <p><span className="text-slate-400">ML Confidence:</span> {Number(scan.mlConfidence || 0).toFixed(2)}</p>
+                <p><span className="text-slate-400">Created:</span> {new Date(scan.createdAt).toLocaleString()}</p>
+              </div>
+            </section>
+
+            <section className="rounded-xl border border-cyan-500/20 bg-cyber-900/70 p-5">
+              <h3 className="mb-4 text-lg font-semibold text-cyan-200">Severity Summary</h3>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <p><span className="text-slate-400">Informational:</span> {severitySummary.informational}</p>
+                <p><span className="text-slate-400">Medium:</span> {severitySummary.medium}</p>
+                <p><span className="text-slate-400">High:</span> {severitySummary.high}</p>
+                <p><span className="text-slate-400">Critical:</span> {severitySummary.critical}</p>
+              </div>
+              <p className="mt-3 text-xs text-slate-400">Generated at: {new Date().toLocaleString()}</p>
+            </section>
+
+            <section className="rounded-xl border border-cyan-500/20 bg-cyber-900/70 p-5">
+              <h3 className="mb-4 text-lg font-semibold text-cyan-200">Alerts</h3>
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-cyan-500/20 text-left text-slate-300">
+                      <th className="px-3 py-2">Attack Type</th>
+                      <th className="px-3 py-2">Severity</th>
+                      <th className="px-3 py-2">Risk Score</th>
+                      <th className="px-3 py-2">Confidence</th>
+                      <th className="px-3 py-2">Endpoint</th>
+                      <th className="px-3 py-2">Payload</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {alerts.length === 0 ? (
+                      <tr>
+                        <td colSpan="6" className="px-3 py-6 text-center text-slate-400">
+                          No alerts generated for this scan.
+                        </td>
+                      </tr>
+                    ) : (
+                      alerts.map((alert) => (
+                        <tr key={alert._id} className="border-b border-cyan-500/10 text-slate-200 align-top">
+                          <td className="px-3 py-2">{alert.attackType}</td>
+                          <td className="px-3 py-2"><SeverityBadge severity={alert.severity} /></td>
+                          <td className="px-3 py-2">{Number(alert.riskScore || 0).toFixed(2)}</td>
+                          <td className="px-3 py-2">{Number(alert.mlConfidence || 0).toFixed(2)}</td>
+                          <td className="px-3 py-2">{alert.endpoint}</td>
+                          <td className="px-3 py-2 max-w-xs break-words">{alert.payload}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        ) : null}
+      </main>
+    </div>
+  );
+};
+
+export default ScanDetailsPage;

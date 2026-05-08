@@ -1,8 +1,9 @@
-﻿// server.js
-
-import dotenv from "dotenv";
+﻿import dotenv from "dotenv";
+import http from "http";
+import { Server } from "socket.io";
 import app from "./app.js";
 import connectDB from "./config/db.js";
+import { initializeSocket } from "./socket/socket.js";
 
 // Load environment variables from .env
 dotenv.config();
@@ -10,23 +11,36 @@ dotenv.config();
 // Define server port
 const PORT = process.env.PORT || 5000;
 
-// Start server function
 const startServer = async () => {
   try {
-    // Connect to MongoDB
     await connectDB();
 
-    // Start Express server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
+    // Wrap Express app with Node HTTP server so Socket.IO can share same port.
+    const httpServer = http.createServer(app);
+
+    const io = new Server(httpServer, {
+      cors: {
+        origin: "*",
+      },
+    });
+
+    initializeSocket(io);
+
+    io.on("connection", (socket) => {
+      console.log(`Socket connected: ${socket.id}`);
+
+      socket.on("disconnect", () => {
+        console.log(`Socket disconnected: ${socket.id}`);
+      });
+    });
+
+    httpServer.listen(PORT, () => {
+      console.log(`Server + Socket.IO running on port ${PORT}`);
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error.message);
-
-    // Exit process if startup fails
+    console.error("Failed to start server:", error.message);
     process.exit(1);
   }
 };
 
-// Run server
 startServer();
