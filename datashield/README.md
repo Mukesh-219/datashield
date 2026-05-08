@@ -120,6 +120,11 @@ python app.py
 - **Scan History**: Track past security assessments
 - **Risk Analysis**: ML-powered risk scoring
 
+## 📚 Documentation
+
+- [API Documentation](docs/API.md)
+- [Contributing Guide](CONTRIBUTING.md)
+
 ## 🤝 Contributing
 
 We welcome contributions! Please follow these steps:
@@ -129,6 +134,8 @@ We welcome contributions! Please follow these steps:
 3. Commit changes: `git commit -m 'Add amazing feature'`
 4. Push to branch: `git push origin feature/amazing-feature`
 5. Open a Pull Request
+
+For details on workflow, code style, and PR expectations, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 📄 License
 
