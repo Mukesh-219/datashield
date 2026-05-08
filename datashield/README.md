@@ -1,53 +1,148 @@
-# DataShield – AI Powered Cybersecurity System
+# DataShield – AI Powered Cybersecurity System 🛡️
 
-## Project Overview
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![CI](https://github.com/Mukesh-219/datashield/actions/workflows/ci.yml/badge.svg)](https://github.com/Mukesh-219/datashield/actions/workflows/ci.yml)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
+[![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
 
-DataShield is an AI-powered cybersecurity platform that detects:
-- SQL Injection (SQLi)
-- Cross-Site Scripting (XSS)
-- Suspicious web attacks
+> An intelligent cybersecurity platform that leverages machine learning to detect and classify web vulnerabilities in real-time.
 
-The system includes:
-- vulnerability scanning
-- ML-based attack classification
-- risk scoring
-- real-time dashboard visualization
+## 🚀 Features
 
-## Tech Stack
+- **Advanced Threat Detection**: AI-powered detection of SQL Injection, XSS, and other web attacks
+- **Real-time Scanning**: Continuous monitoring and vulnerability assessment
+- **Risk Scoring**: Machine learning-based risk evaluation for identified threats
+- **Interactive Dashboard**: Modern React-based UI with data visualizations
+- **Alert Management**: Comprehensive alert system with severity levels
+- **RESTful API**: Well-documented API for integration
+- **Scalable Architecture**: Microservices design with separate ML service
 
-### Frontend:
-- React.js (Vite)
-- Tailwind CSS
-- React Router
-- Axios
-- Chart.js
-
-### Backend:
-- Node.js
-- Express.js
-- JWT Authentication
-- Mongoose
-- MongoDB Atlas
-
-### ML Service:
-- Python Flask
-- Scikit-learn
-- Random Forest
-- joblib
-
-### Database:
-- MongoDB Atlas
-
-## Project Structure
+## 🏗️ Architecture
 
 ```
-datashield/
-│
-├── frontend/
-├── backend/
-├── ml-service/
-├── docs/
-└── README.md
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   ML Service    │
+│   (React)       │◄──►│  (Node/Express) │◄──►│   (Python)      │
+│                 │    │                 │    │                 │
+│ - Dashboard     │    │ - Auth          │    │ - Classification│
+│ - Charts        │    │ - API Routes    │    │ - Risk Scoring  │
+│ - Real-time     │    │ - WebSocket     │    │ - Model Training│
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+                              │
+                              ▼
+                       ┌─────────────────┐
+                       │   Database      │
+                       │  (MongoDB)      │
+                       └─────────────────┘
+```
+
+## 🛠️ Tech Stack
+
+### Frontend:
+- ⚛️ **React.js** (Vite) - Modern UI framework
+- 🎨 **Tailwind CSS** - Utility-first CSS framework
+- 🧭 **React Router** - Client-side routing
+- 📊 **Chart.js** - Data visualization
+- 🔄 **Axios** - HTTP client
+
+### Backend:
+- 🟢 **Node.js** - Runtime environment
+- 🚀 **Express.js** - Web framework
+- 🔐 **JWT** - Authentication
+- 🍃 **Mongoose** - MongoDB ODM
+- 🌐 **Socket.io** - Real-time communication
+
+### ML Service:
+- 🐍 **Python Flask** - REST API
+- 🤖 **Scikit-learn** - Machine learning
+- 🌳 **Random Forest** - Classification algorithm
+- 💾 **Joblib** - Model serialization
+
+### Database:
+- 🍃 **MongoDB Atlas** - Cloud database
+
+## 📦 Installation
+
+### Prerequisites
+- Node.js 18+
+- Python 3.8+
+- MongoDB Atlas account
+- Git
+
+### Clone the Repository
+```bash
+git clone https://github.com/Mukesh-219/datashield.git
+cd datashield
+```
+
+### Backend Setup
+```bash
+cd backend
+npm install
+# Configure environment variables in .env
+npm run dev
+```
+
+### Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### ML Service Setup
+```bash
+cd ml-service
+pip install -r requirements.txt
+python app.py
+```
+
+## 🚀 Usage
+
+1. **Start the Backend**: `cd backend && npm run dev`
+2. **Start the Frontend**: `cd frontend && npm run dev`
+3. **Start ML Service**: `cd ml-service && python app.py`
+4. **Access Dashboard**: Open http://localhost:5173
+
+### API Endpoints
+
+- `POST /api/auth/login` - User authentication
+- `POST /api/scans` - Initiate security scan
+- `GET /api/alerts` - Retrieve security alerts
+- `POST /api/ml/classify` - ML-based threat classification
+
+## 📊 Dashboard Features
+
+- **Real-time Metrics**: Live security statistics
+- **Attack Visualizations**: Charts for threat patterns
+- **Alert Management**: View and manage security alerts
+- **Scan History**: Track past security assessments
+- **Risk Analysis**: ML-powered risk scoring
+
+## 🤝 Contributing
+
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit changes: `git commit -m 'Add amazing feature'`
+4. Push to branch: `git push origin feature/amazing-feature`
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 📞 Contact
+
+- **Author**: Mukesh
+- **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219)
+- **Project Link**: [https://github.com/Mukesh-219/datashield](https://github.com/Mukesh-219/datashield)
+
+---
+
+⭐ **Star this repo** if you find it useful!
 ```
 
 ## Getting Started
