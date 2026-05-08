@@ -7,6 +7,10 @@
 [![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
 
 > An intelligent cybersecurity platform that leverages machine learning to detect and classify web vulnerabilities in real-time.
+>
+> **Built and maintained by Mukesh-219 and Jigisha-Diksha.**
+>
+> Designed for security teams, developers, and analysts who need fast, accurate threat insights.
 
 ## 🚀 Features
 
@@ -141,9 +145,14 @@ For details on workflow, code style, and PR expectations, see [CONTRIBUTING.md](
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
+## � Contributors
+
+- **Mukesh-219**
+- **Jigisha-Diksha**
+
 ## 📞 Contact
 
-- **Author**: Mukesh
+- **Authors**: Mukesh, Jigisha-Diksha
 - **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219)
 - **Project Link**: [https://github.com/Mukesh-219/datashield](https://github.com/Mukesh-219/datashield)
 
