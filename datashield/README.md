@@ -1,27 +1,51 @@
-# DataShield – AI Powered Cybersecurity System 🛡️
+# DataShield — AI-Powered Cybersecurity Platform 🛡️
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
-[![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-brightgreen)](https://opensource.org/licenses/MIT) [![Node.js](https://img.shields.io/badge/Node.js-18+-green)](https://nodejs.org/) [![React](https://img.shields.io/badge/React-18+-blue)](https://reactjs.org/) [![Python](https://img.shields.io/badge/Python-3.8+-yellow)](https://www.python.org/)
 
-> DataShield is an AI-powered cybersecurity platform designed to detect, analyze, and visualize web application threats in real-time.
+> DataShield detects, classifies, and visualizes web application threats in real-time using AI, real-time alerts, and rich dashboard analytics.
 
-## Project Overview
+---
 
-DataShield unifies web application security monitoring, machine learning threat detection, and real-time alerting into a single modern platform. It combines a React dashboard with a Node.js API, a MongoDB Atlas backend, and a Python ML microservice to deliver intelligent scan analysis, prioritized alerts, and actionable security insights.
+## ✨ Why DataShield?
 
-## Features
+DataShield delivers a modern cybersecurity experience by combining: 
 
-- AI-driven threat detection for SQL Injection, XSS, and suspicious activity
-- Real-time scanning and alert generation with Socket.IO
-- Risk scoring and severity classification for prioritized remediation
-- Interactive dashboard with analytics and visualizations
-- PDF report generation for security assessments
-- User authentication with JWT-based access control
-- Fully client-side report generation and modern cybersecurity theme
+- **AI-powered threat detection** for SQL Injection, XSS, and suspicious payloads
+- **Real-time alerting** with live updates via Socket.IO
+- **Risk scoring** that prioritizes triage and remediation
+- **Interactive dashboard analytics** to visualize attack patterns
+- **Automated PDF reporting** for executive-ready security summaries
 
-## Tech Stack
+---
+
+## 🚀 Core Features
+
+- Real-time scan ingestion and alert generation
+- Machine learning classification for payloads
+- Severity and risk-based alert scoring
+- Interactive charts for attack trends and distribution
+- Scan history, alert management, and drill-down details
+- Secure JWT authentication and protected API routes
+- Frontend report export with `jsPDF` and `html2canvas`
+
+---
+
+## 🧱 Architecture
+
+```
+  Frontend (React + Vite)   <---->   Backend (Node + Express)   <---->   ML Service (Python + Flask)
+           │                             │                            │
+           │ Socket.IO / REST API        │ ML inference / persistence  │
+           │                             │                            │
+           └─────────────────────────────┴────────────────────────────┘
+                                      │
+                                      ▼
+                                MongoDB Atlas
+```
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
 - React
@@ -29,140 +53,129 @@ DataShield unifies web application security monitoring, machine learning threat 
 - Tailwind CSS
 - Recharts
 - Socket.IO Client
+- Axios
 
 ### Backend
 - Node.js
 - Express.js
-- MongoDB Atlas
-- JWT
+- Mongoose
+- JWT Authentication
 - Socket.IO
 
 ### ML Service
 - Flask
-- Scikit-learn
+- scikit-learn
 - Random Forest
 - TF-IDF
 
-## System Architecture
+### Database
+- MongoDB Atlas
 
-```
-       ┌────────────────────┐        ┌────────────────────┐        ┌────────────────────┐
-       │      Frontend      │        │      Backend       │        │      ML Service    │
-       │   React + Vite     │◄──────►│  Node.js + Express │◄──────►│   Flask + scikit   │
-       │  Tailwind + Recharts│       │  JWT + Socket.IO   │       │  Random Forest     │
-       └────────────────────┘        └────────────────────┘        └────────────────────┘
-                    ▲                             ▲                         ▲
-                    │                             │                         │
-                    │                             │                         │
-                    │                             ▼                         │
-                    │                    ┌────────────────────┐            │
-                    └───────────────────►│   MongoDB Atlas      │◄───────────┘
-                                         └────────────────────┘
-```
+---
 
-## Installation Guide
+## ⚡ Quick Start
 
-### Prerequisites
-- Node.js 18+
-- Python 3.8+
-- MongoDB Atlas account
-- Git
-
-### Clone the repository
+### 1. Clone the repo
 ```bash
 git clone https://github.com/Mukesh-219/datashield.git
 cd datashield
 ```
 
-### Backend setup
+### 2. Start the backend
 ```bash
 cd backend
 npm install
-cp .env.example .env
-# Update .env values with your MongoDB Atlas and JWT credentials
+copy .env.example .env
+# Update .env with your MongoDB Atlas and JWT settings
 npm run dev
 ```
 
-### Frontend setup
+### 3. Start the frontend
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
 ```
 
-### ML service setup
+### 4. Start the ML service
 ```bash
-cd ml-service
+cd ../ml-service
 pip install -r requirements.txt
 python app.py
 ```
 
-## Environment Variables
+### 5. Open the dashboard
+- Visit: `http://localhost:5173`
+
+---
+
+## 🔧 Environment Variables
 
 ### Backend
-- `MONGO_URI` – MongoDB Atlas connection string
-- `JWT_SECRET` – Secret key for JWT token signing
-- `PORT` – Backend server port (default: `5000`)
-- `ML_API_URL` – ML service endpoint (default: `http://127.0.0.1:8000/predict`)
+- `MONGO_URI` — MongoDB Atlas connection string
+- `JWT_SECRET` — JWT signing secret
+- `PORT` — backend port (default: `5000`)
+- `ML_API_URL` — ML service endpoint (default: `http://127.0.0.1:8000/predict`)
 
 ### Frontend
-- `VITE_API_URL` – Base URL for backend API requests (if used)
+- `VITE_API_URL` — backend API base URL
 
 ### ML Service
-- `MONGO_URI` (optional for future persistence)
-- `PORT` – ML service port (default: `8000`)
+- `PORT` — ML service port (default: `8000`)
 
-## API Documentation
+---
 
-The project exposes a REST API with authentication, scan management, alert management, and ML inference endpoints. Full details are available in [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
+## 📚 Documentation
 
-## Screenshots Placeholder
+- [API Documentation](API_DOCUMENTATION.md)
+- [Deployment Guide](DEPLOYMENT_GUIDE.md)
+- [Project Report](PROJECT_REPORT.md)
+- [Contributing Guide](CONTRIBUTING.md)
 
-> Add screenshots of the dashboard, alerts page, report generation, and analytics charts here.
+---
 
-- Screenshot 1: Dashboard overview
-- Screenshot 2: Scan creation flow
-- Screenshot 3: Real-time alert notification
-- Screenshot 4: PDF report generated
+## 🧾 API Highlights
 
-## Deployment Instructions
+- `POST /api/auth/login` — authenticate users
+- `POST /api/scans` — create new vulnerability scans
+- `GET /api/alerts` — list generated alerts
+- `POST /predict` — ML payload classification
 
-For deployment guidance, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
+---
 
-## Future Scope
+## 🌟 What You’ll See
 
-- Add role-based access control
-- Add more ML models for deeper vulnerability classification
-- Extend support for API security scanning
-- Add notification integrations (email, Slack)
-- Add audit logs and export options
+- Dashboard metrics for scans, alerts, and risk levels
+- Real-time alert cards and notifications
+- Attack type distribution charts
+- Scan trend and severity breakdown visualizations
+- Downloadable PDF security reports
 
-## Contributing
+---
 
-Contributions are welcome. Please review [CONTRIBUTING.md](CONTRIBUTING.md) if you plan to contribute.
+## 🎯 Future Enhancements
+
+- Role-based access control
+- Expanded vulnerability classification models
+- Email and Slack alert integrations
+- Audit history and advanced remediation workflows
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please review [CONTRIBUTING.md](CONTRIBUTING.md) and open a pull request.
+
+---
 
 ## 📞 Contact
 
 - **Authors**: Mukesh, Jigisha-Diksha
-- **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219) and [@Jigisha-Diksha](https://github.com/Jigisha-Diksha)
-- **Project Link**: [https://github.com/Mukesh-219/datashield](https://github.com/Mukesh-219/datashield)
+- **GitHub**: [@Mukesh-219](https://github.com/Mukesh-219)
+- **Project**: [https://github.com/Mukesh-219/datashield](https://github.com/Mukesh-219/datashield)
 
 ---
 
-⭐ **Star this repo** if you find it useful!
+## 📄 License
 
-## License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
-
-## Getting Started
-
-1. Clone the repository
-2. Install dependencies for each service
-3. Set up environment variables
-4. Run the services
-
-## License
-
-This project is for educational purposes.
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
