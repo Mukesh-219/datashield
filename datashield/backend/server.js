@@ -8,6 +8,10 @@ import { initializeSocket } from "./socket/socket.js";
 // Load environment variables from .env
 dotenv.config();
 
+console.log("dotenv loaded:", !!(process.env.MONGODB_URI || process.env.MONGO_URI));
+console.log("JWT_SECRET configured:", !!process.env.JWT_SECRET);
+console.log("PORT configured:", process.env.PORT || "unset");
+
 // Define server port
 const PORT = process.env.PORT || 5000;
 

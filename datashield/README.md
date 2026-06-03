@@ -1,72 +1,66 @@
 # DataShield – AI Powered Cybersecurity System 🛡️
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![CI](https://github.com/Mukesh-219/datashield/actions/workflows/ci.yml/badge.svg)](https://github.com/Mukesh-219/datashield/actions/workflows/ci.yml)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![React](https://img.shields.io/badge/React-18+-blue.svg)](https://reactjs.org/)
 [![Python](https://img.shields.io/badge/Python-3.8+-yellow.svg)](https://www.python.org/)
 
-> An intelligent cybersecurity platform that leverages machine learning to detect and classify web vulnerabilities in real-time.
->
-> **Built and maintained by Mukesh-219 and Jigisha-Diksha.**
->
-> Designed for security teams, developers, and analysts who need fast, accurate threat insights.
+> DataShield is an AI-powered cybersecurity platform designed to detect, analyze, and visualize web application threats in real-time.
 
-## 🚀 Features
+## Project Overview
 
-- **Advanced Threat Detection**: AI-powered detection of SQL Injection, XSS, and other web attacks
-- **Real-time Scanning**: Continuous monitoring and vulnerability assessment
-- **Risk Scoring**: Machine learning-based risk evaluation for identified threats
-- **Interactive Dashboard**: Modern React-based UI with data visualizations
-- **Alert Management**: Comprehensive alert system with severity levels
-- **RESTful API**: Well-documented API for integration
-- **Scalable Architecture**: Microservices design with separate ML service
+DataShield unifies web application security monitoring, machine learning threat detection, and real-time alerting into a single modern platform. It combines a React dashboard with a Node.js API, a MongoDB Atlas backend, and a Python ML microservice to deliver intelligent scan analysis, prioritized alerts, and actionable security insights.
 
-## 🏗️ Architecture
+## Features
+
+- AI-driven threat detection for SQL Injection, XSS, and suspicious activity
+- Real-time scanning and alert generation with Socket.IO
+- Risk scoring and severity classification for prioritized remediation
+- Interactive dashboard with analytics and visualizations
+- PDF report generation for security assessments
+- User authentication with JWT-based access control
+- Fully client-side report generation and modern cybersecurity theme
+
+## Tech Stack
+
+### Frontend
+- React
+- Vite
+- Tailwind CSS
+- Recharts
+- Socket.IO Client
+
+### Backend
+- Node.js
+- Express.js
+- MongoDB Atlas
+- JWT
+- Socket.IO
+
+### ML Service
+- Flask
+- Scikit-learn
+- Random Forest
+- TF-IDF
+
+## System Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │    Backend      │    │   ML Service    │
-│   (React)       │◄──►│  (Node/Express) │◄──►│   (Python)      │
-│                 │    │                 │    │                 │
-│ - Dashboard     │    │ - Auth          │    │ - Classification│
-│ - Charts        │    │ - API Routes    │    │ - Risk Scoring  │
-│ - Real-time     │    │ - WebSocket     │    │ - Model Training│
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-                              │
-                              ▼
-                       ┌─────────────────┐
-                       │   Database      │
-                       │  (MongoDB)      │
-                       └─────────────────┘
+       ┌────────────────────┐        ┌────────────────────┐        ┌────────────────────┐
+       │      Frontend      │        │      Backend       │        │      ML Service    │
+       │   React + Vite     │◄──────►│  Node.js + Express │◄──────►│   Flask + scikit   │
+       │  Tailwind + Recharts│       │  JWT + Socket.IO   │       │  Random Forest     │
+       └────────────────────┘        └────────────────────┘        └────────────────────┘
+                    ▲                             ▲                         ▲
+                    │                             │                         │
+                    │                             │                         │
+                    │                             ▼                         │
+                    │                    ┌────────────────────┐            │
+                    └───────────────────►│   MongoDB Atlas      │◄───────────┘
+                                         └────────────────────┘
 ```
 
-## 🛠️ Tech Stack
-
-### Frontend:
-- ⚛️ **React.js** (Vite) - Modern UI framework
-- 🎨 **Tailwind CSS** - Utility-first CSS framework
-- 🧭 **React Router** - Client-side routing
-- 📊 **Chart.js** - Data visualization
-- 🔄 **Axios** - HTTP client
-
-### Backend:
-- 🟢 **Node.js** - Runtime environment
-- 🚀 **Express.js** - Web framework
-- 🔐 **JWT** - Authentication
-- 🍃 **Mongoose** - MongoDB ODM
-- 🌐 **Socket.io** - Real-time communication
-
-### ML Service:
-- 🐍 **Python Flask** - REST API
-- 🤖 **Scikit-learn** - Machine learning
-- 🌳 **Random Forest** - Classification algorithm
-- 💾 **Joblib** - Model serialization
-
-### Database:
-- 🍃 **MongoDB Atlas** - Cloud database
-
-## 📦 Installation
+## Installation Guide
 
 ### Prerequisites
 - Node.js 18+
@@ -74,81 +68,78 @@
 - MongoDB Atlas account
 - Git
 
-### Clone the Repository
+### Clone the repository
 ```bash
 git clone https://github.com/Mukesh-219/datashield.git
 cd datashield
 ```
 
-### Backend Setup
+### Backend setup
 ```bash
 cd backend
 npm install
-# Configure environment variables in .env
+cp .env.example .env
+# Update .env values with your MongoDB Atlas and JWT credentials
 npm run dev
 ```
 
-### Frontend Setup
+### Frontend setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
 
-### ML Service Setup
+### ML service setup
 ```bash
 cd ml-service
 pip install -r requirements.txt
 python app.py
 ```
 
-## 🚀 Usage
+## Environment Variables
 
-1. **Start the Backend**: `cd backend && npm run dev`
-2. **Start the Frontend**: `cd frontend && npm run dev`
-3. **Start ML Service**: `cd ml-service && python app.py`
-4. **Access Dashboard**: Open http://localhost:5173
+### Backend
+- `MONGO_URI` – MongoDB Atlas connection string
+- `JWT_SECRET` – Secret key for JWT token signing
+- `PORT` – Backend server port (default: `5000`)
+- `ML_API_URL` – ML service endpoint (default: `http://127.0.0.1:8000/predict`)
 
-### API Endpoints
+### Frontend
+- `VITE_API_URL` – Base URL for backend API requests (if used)
 
-- `POST /api/auth/login` - User authentication
-- `POST /api/scans` - Initiate security scan
-- `GET /api/alerts` - Retrieve security alerts
-- `POST /api/ml/classify` - ML-based threat classification
+### ML Service
+- `MONGO_URI` (optional for future persistence)
+- `PORT` – ML service port (default: `8000`)
 
-## 📊 Dashboard Features
+## API Documentation
 
-- **Real-time Metrics**: Live security statistics
-- **Attack Visualizations**: Charts for threat patterns
-- **Alert Management**: View and manage security alerts
-- **Scan History**: Track past security assessments
-- **Risk Analysis**: ML-powered risk scoring
+The project exposes a REST API with authentication, scan management, alert management, and ML inference endpoints. Full details are available in [API_DOCUMENTATION.md](API_DOCUMENTATION.md).
 
-## 📚 Documentation
+## Screenshots Placeholder
 
-- [API Documentation](docs/API.md)
-- [Contributing Guide](CONTRIBUTING.md)
+> Add screenshots of the dashboard, alerts page, report generation, and analytics charts here.
 
-## 🤝 Contributing
+- Screenshot 1: Dashboard overview
+- Screenshot 2: Scan creation flow
+- Screenshot 3: Real-time alert notification
+- Screenshot 4: PDF report generated
 
-We welcome contributions! Please follow these steps:
+## Deployment Instructions
 
-1. Fork the repository
-2. Create a feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open a Pull Request
+For deployment guidance, see [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
 
-For details on workflow, code style, and PR expectations, see [CONTRIBUTING.md](CONTRIBUTING.md).
+## Future Scope
 
-## 📄 License
+- Add role-based access control
+- Add more ML models for deeper vulnerability classification
+- Extend support for API security scanning
+- Add notification integrations (email, Slack)
+- Add audit logs and export options
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Contributing
 
-## � Contributors
-
-- **Mukesh-219**
-- **Jigisha-Diksha**
+Contributions are welcome. Please review [CONTRIBUTING.md](CONTRIBUTING.md) if you plan to contribute.
 
 ## 📞 Contact
 
@@ -159,7 +150,11 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 ⭐ **Star this repo** if you find it useful!
-```
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
 
 ## Getting Started
 

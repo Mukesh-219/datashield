@@ -62,6 +62,7 @@ const createAlert = async (req, res, next) => {
 
     const io = getSocket();
     if (io) {
+      io.emit("alertCreated", { alert });
       io.emit("alert:created", { alert });
     }
 

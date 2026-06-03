@@ -1,5 +1,6 @@
 ﻿import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { getCurrentUser, loginUser, registerUser } from "../services/authService";
+import { initializeSocket, disconnectSocket } from "../services/socketService";
 
 const AuthContext = createContext(null);
 
@@ -28,6 +29,14 @@ export const AuthProvider = ({ children }) => {
 
     bootstrapAuth();
   }, []);
+
+  useEffect(() => {
+    if (user) {
+      initializeSocket();
+    } else {
+      disconnectSocket();
+    }
+  }, [user]);
 
   const login = async (email, password) => {
     const data = await loginUser({ email, password });

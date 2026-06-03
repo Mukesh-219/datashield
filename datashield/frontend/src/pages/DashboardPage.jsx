@@ -1,21 +1,24 @@
 ﻿import { useCallback, useMemo, useState, useEffect } from "react";
-import { io } from "socket.io-client";
 import Sidebar from "../components/Sidebar";
 import TopNavbar from "../components/TopNavbar";
 import StatCard from "../components/StatCard";
 import AlertsTable from "../components/AlertsTable";
 import ScanForm from "../components/ScanForm";
 import RecentScans from "../components/RecentScans";
-import SeverityPieChart from "../components/SeverityPieChart";
-import AttackBarChart from "../components/AttackBarChart";
-import ScansLineChart from "../components/ScansLineChart";
+import SeverityPieChart from "../components/charts/SeverityPieChart";
+import AttackTypeBarChart from "../components/charts/AttackTypeBarChart";
+import ScanTrendChart from "../components/charts/ScanTrendChart";
 import { getDashboardData } from "../services/dashboardService";
+import { subscribeToEvent } from "../services/socketService";
 
 const SOCKET_URL = "http://localhost:5000";
 
 const DashboardPage = () => {
   const [scans, setScans] = useState([]);
   const [alerts, setAlerts] = useState([]);
+  const [severityStats, setSeverityStats] = useState([]);
+  const [attackTypeStats, setAttackTypeStats] = useState([]);
+  const [scanTrendStats, setScanTrendStats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState("");
@@ -34,6 +37,9 @@ const DashboardPage = () => {
       const data = await getDashboardData();
       setScans(data.scans);
       setAlerts(data.alerts);
+      setSeverityStats(data.severityStats);
+      setAttackTypeStats(data.attackTypeStats);
+      setScanTrendStats(data.scanTrendStats);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load dashboard data");
     } finally {
@@ -47,18 +53,30 @@ const DashboardPage = () => {
   }, [refreshDashboard]);
 
   useEffect(() => {
-    const socket = io(SOCKET_URL, {
-      transports: ["websocket"],
-    });
-
-    socket.on("alert:created", (payload) => {
-      const attackType = payload?.alert?.attackType || "Threat";
-      setNotification(`New ${attackType} alert detected`);
+    const handleAlertCreated = (payload) => {
+      const attackType = payload?.alert?.attackType || "Attack";
+      const severity = payload?.alert?.severity || "unknown";
+      const riskScore = payload?.alert?.riskScore !== undefined ? Number(payload.alert.riskScore).toFixed(2) : "0.00";
+      setNotification(`New ${attackType} alert • Severity: ${severity} • Risk: ${riskScore}`);
       refreshDashboard(true);
-    });
+    };
+
+    const handleScanCreated = (payload) => {
+      const targetUrl = payload?.scan?.targetUrl || "unknown target";
+      setNotification(`New scan created for ${targetUrl}`);
+      refreshDashboard(true);
+    };
+
+    const unsubscribeAlert = subscribeToEvent("alertCreated", handleAlertCreated);
+    const unsubscribeOldAlert = subscribeToEvent("alert:created", handleAlertCreated);
+    const unsubscribeScan = subscribeToEvent("scanCreated", handleScanCreated);
+    const unsubscribeOldScan = subscribeToEvent("scan:created", handleScanCreated);
 
     return () => {
-      socket.disconnect();
+      unsubscribeAlert();
+      unsubscribeOldAlert();
+      unsubscribeScan();
+      unsubscribeOldScan();
     };
   }, [refreshDashboard]);
 
@@ -122,10 +140,21 @@ const DashboardPage = () => {
           </div>
         </section>
 
-        <section className="mt-6 grid gap-6 xl:grid-cols-3">
-          <SeverityPieChart alerts={alerts} />
-          <AttackBarChart alerts={alerts} />
-          <ScansLineChart scans={scans} />
+        <section className="mt-6 rounded-3xl border border-cyan-500/20 bg-cyber-900/80 p-6">
+          <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-slate-100">Analytics</h2>
+              <p className="text-sm text-slate-400">
+                Visualize alert severity, attack frequency, and scan activity over the last 7 days.
+              </p>
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            <SeverityPieChart data={severityStats} />
+            <AttackTypeBarChart data={attackTypeStats} />
+            <ScanTrendChart data={scanTrendStats} />
+          </div>
         </section>
 
         <section className="mt-6">

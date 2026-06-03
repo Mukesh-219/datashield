@@ -84,6 +84,7 @@ const createScan = async (req, res, next) => {
 
           const io = getSocket();
           if (io) {
+            io.emit("alertCreated", { alert });
             io.emit("alert:created", { alert });
           }
         }
@@ -98,6 +99,12 @@ const createScan = async (req, res, next) => {
           message: mlError.message,
         };
       }
+    }
+
+    const io = getSocket();
+    if (io) {
+      io.emit("scanCreated", { scan });
+      io.emit("scan:created", { scan });
     }
 
     return res.status(201).json({
