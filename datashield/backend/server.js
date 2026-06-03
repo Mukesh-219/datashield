@@ -16,13 +16,43 @@ console.log("PORT configured:", process.env.PORT || "unset");
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
+  let httpServer;
+  let io;
+
+  const shutdown = async (signal) => {
+    console.log(`Received ${signal}. Shutting down server...`);
+    try {
+      if (io) {
+        await io.close();
+      }
+      if (httpServer && httpServer.listening) {
+        await new Promise((resolve, reject) => {
+          httpServer.close((err) => {
+            if (err) reject(err);
+            else resolve();
+          });
+        });
+      }
+    } catch (shutdownError) {
+      console.error("Error during shutdown:", shutdownError);
+    } finally {
+      process.exit(0);
+    }
+  };
+
+  process.on("SIGINT", () => shutdown("SIGINT"));
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.once("SIGUSR2", () => {
+    shutdown("SIGUSR2").then(() => process.kill(process.pid, "SIGUSR2"));
+  });
+
   try {
     await connectDB();
 
     // Wrap Express app with Node HTTP server so Socket.IO can share same port.
-    const httpServer = http.createServer(app);
+    httpServer = http.createServer(app);
 
-    const io = new Server(httpServer, {
+    io = new Server(httpServer, {
       cors: {
         origin: "*",
       },
@@ -36,6 +66,14 @@ const startServer = async () => {
       socket.on("disconnect", () => {
         console.log(`Socket disconnected: ${socket.id}`);
       });
+    });
+
+    httpServer.on("error", (error) => {
+      console.error("HTTP server error:", error);
+      if (error.code === "EADDRINUSE") {
+        console.error(`Port ${PORT} is already in use. Please stop the running process or choose a different port.`);
+      }
+      process.exit(1);
     });
 
     httpServer.listen(PORT, () => {

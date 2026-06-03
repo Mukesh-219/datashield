@@ -1,9 +1,15 @@
 ﻿import axios from "axios";
 
-const ML_API_URL = process.env.ML_API_URL || "http://127.0.0.1:5000/predict";
+const ML_API_URL =
+  process.env.ML_API_URL || "http://127.0.0.1:8000/predict";
+
+// Debug log
+console.log("ML_API_URL =", ML_API_URL);
 
 const predictPayloadThreat = async (payload) => {
   try {
+    console.log("Sending payload to ML service:", payload);
+
     const response = await axios.post(
       ML_API_URL,
       { payload },
@@ -15,10 +21,14 @@ const predictPayloadThreat = async (payload) => {
       }
     );
 
+    console.log("ML Service Response:", response.data);
+
     const data = response.data || {};
 
     if (!data.success) {
-      throw new Error(data.message || "ML service returned unsuccessful response");
+      throw new Error(
+        data.message || "ML service returned unsuccessful response"
+      );
     }
 
     return {
@@ -26,8 +36,19 @@ const predictPayloadThreat = async (payload) => {
       confidence: Number(data.confidence),
     };
   } catch (error) {
-    // Throw a clean message so controller can handle graceful fallback.
-    const message = error.response?.data?.message || error.message || "ML service request failed";
+    console.error("ML Service Error:", {
+      url: ML_API_URL,
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+
+    const message =
+      error.response?.data?.message ||
+      error.response?.data?.detail ||
+      error.message ||
+      "ML service request failed";
+
     throw new Error(message);
   }
 };
