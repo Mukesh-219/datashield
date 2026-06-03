@@ -3,6 +3,7 @@ import Scan from "../models/Scan.js";
 import Alert from "../models/Alert.js";
 import calculateRiskData from "../services/riskScoringService.js";
 import mlService from "../services/mlService.js";
+import runScanner from "../scanner/scannerService.js";
 import { getSocket } from "../socket/socket.js";
 
 const isValidUrl = (value) => {
@@ -50,6 +51,12 @@ const createScan = async (req, res, next) => {
       initiatedBy: req.user._id,
       status: "queued",
     });
+
+    const scannerEnabled = process.env.ENABLE_SCANNER === "true";
+    if (scannerEnabled && scan.status === "queued") {
+      scan.status = "running";
+      await scan.save();
+    }
 
     let mlAnalysis = null;
 
@@ -101,6 +108,62 @@ const createScan = async (req, res, next) => {
       }
     }
 
+    if (scannerEnabled) {
+      void (async () => {
+        let scannedScan;
+
+        try {
+          const scannerResult = await runScanner(targetUrl);
+          scannedScan = await Scan.findById(scan._id);
+          if (!scannedScan) return;
+
+          const io = getSocket();
+          const normalizeScannerAttackType = (type) => {
+            if (!type) return type;
+            if (String(type).trim() === "XSS") return "Reflected XSS";
+            return String(type).trim();
+          };
+
+          for (const vulnerability of scannerResult.vulnerabilities || []) {
+            const attackType = normalizeScannerAttackType(vulnerability.attackType);
+            const endpointValue = vulnerability.endpoint || targetUrl;
+            const vulnerabilityPayload = vulnerability.payload || "";
+            const mlConfidence = typeof vulnerability.confidence === "number" ? vulnerability.confidence : 0;
+            const { riskScore, severity } = calculateRiskData(attackType, mlConfidence);
+
+            const alert = await Alert.create({
+              scan: scannedScan._id,
+              attackType,
+              payload: vulnerabilityPayload || "[Scanner Generated Finding]",
+              endpoint: endpointValue,
+              mlConfidence,
+              riskScore,
+              severity,
+            });
+
+            scannedScan.alertCount += 1;
+            scannedScan.maxRiskScore = Math.max(scannedScan.maxRiskScore, riskScore);
+            if (io) {
+              io.emit("alertCreated", { alert });
+              io.emit("alert:created", { alert });
+            }
+          }
+
+          if (scannedScan.status === "running") {
+            scannedScan.status = "completed";
+          }
+
+          await scannedScan.save();
+        } catch (scannerError) {
+          console.error("Scanner integration failed:", scannerError);
+          if (scannedScan && scannedScan.status === "running") {
+            scannedScan.status = "completed";
+            await scannedScan.save();
+          }
+        }
+      })();
+    }
+
     const io = getSocket();
     if (io) {
       io.emit("scanCreated", { scan });
@@ -111,6 +174,7 @@ const createScan = async (req, res, next) => {
       success: true,
       scan,
       mlAnalysis,
+      scannerEnabled,
     });
   } catch (error) {
     next(error);

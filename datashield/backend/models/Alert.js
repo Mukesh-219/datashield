@@ -12,7 +12,7 @@ const alertSchema = new mongoose.Schema(
     // Type of detected attack
     attackType: {
       type: String,
-      enum: ["SQLi", "Stored XSS", "Reflected XSS", "DOM XSS", "Suspicious"],
+      enum: ["SQLi", "Stored XSS", "Reflected XSS", "DOM XSS", "Suspicious", "PathTraversal", "CommandInjection", "InfoDisclosure"],
       required: [true, "attackType is required"],
     },
 

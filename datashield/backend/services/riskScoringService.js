@@ -2,9 +2,12 @@
 const ATTACK_BASE_SCORES = {
   SQLi: 8.5,
   "Stored XSS": 8.0,
-  "Reflected XSS": 6.5,
+  "Reflected XSS": 8.0,
   "DOM XSS": 6.0,
   Suspicious: 4.0,
+  PathTraversal: 9.5,
+  CommandInjection: 10.0,
+  InfoDisclosure: 6.0,
 };
 
 const getSeverityFromScore = (riskScore) => {
@@ -15,7 +18,8 @@ const getSeverityFromScore = (riskScore) => {
 };
 
 const calculateRiskData = (attackType, mlConfidence) => {
-  const baseValue = ATTACK_BASE_SCORES[attackType];
+  const normalizedAttackType = attackType === 'XSS' ? 'Reflected XSS' : attackType;
+  const baseValue = ATTACK_BASE_SCORES[normalizedAttackType];
 
   if (baseValue === undefined) {
     throw new Error("Unsupported attack type for risk scoring");
