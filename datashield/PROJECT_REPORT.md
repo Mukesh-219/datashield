@@ -1,76 +1,150 @@
 # DataShield Project Report
 
-## Abstract
+## 1. Introduction
+DataShield is an AI-powered web application security platform designed to detect, classify, and prioritize common web threats such as SQL Injection (SQLi) and Cross-Site Scripting (XSS). The platform combines a React dashboard for analyst visibility, a Node.js/Express backend for authenticated orchestration and persistence, a separate Flask-based machine learning (ML) service for payload classification, and MongoDB Atlas for storing scans and alerts. It also supports real-time updates through Socket.IO and provides analytics and PDF report export.
 
-DataShield is an AI-powered cybersecurity system designed to detect, classify, and manage web application vulnerabilities in real-time. The platform combines a React-based dashboard, a Node.js backend with MongoDB Atlas, and a Flask-based machine learning service to deliver security insights, alerts, and remediation guidance for modern application environments.
+## 2. Objectives
+- Build an interactive cybersecurity dashboard to visualize scans, alerts, and risk metrics.
+- Provide an authenticated workflow to submit scan requests (target URL, endpoint, and payload).
+- Integrate machine learning to classify incoming payloads and return prediction confidence.
+- Convert ML outputs into operational security signals using risk scoring and severity levels.
+- Persist scans and alerts securely using MongoDB Atlas.
+- Deliver real-time notifications for newly created scans and alerts using Socket.IO.
+- Support report generation via client-side PDF export.
 
-## Introduction
+## 3. Literature Survey (Consolidated)
+Machine learning approaches to web vulnerability and payload classification commonly leverage **text representation** and **supervised classifiers**. A typical effective pipeline uses **TF-IDF (with n-grams)** to vectorize payload text, followed by classifiers such as **Random Forest** due to its strong baseline performance and robustness on non-linear decision boundaries. 
 
-Web application attacks continue to grow in scale and sophistication. Traditional vulnerability scanners often generate noise and lack real-time responsiveness. DataShield addresses these challenges by integrating machine learning, real-time alerting, and data visualization into a unified platform.
+For operational security workflows, research and industry practice increasingly emphasize **low-latency visibility** and **automation**. Real-time communication mechanisms such as WebSockets (and Socket.IO) reduce the time between detection and human review, improving incident response efficiency.
 
-## Problem Statement
+DataShield consolidates these ideas into a microservices design: the backend orchestrates authenticated operations and persistence, while the ML service performs TF-IDF + Random Forest inference.
 
-Security teams need a way to identify emerging web threats quickly, prioritize true risks, and track remediation actions without relying on manual analysis. Existing tools can be slow, fragmented, or difficult to integrate into modern development pipelines.
+## 4. Research Challenges
+- **Model readiness at runtime:** the ML service must load model artifacts (model + vectorizer) before serving predictions.
+- **Service-to-service reliability:** the backend depends on ML inference availability and network reachability via `ML_API_URL`.
+- **Generalization and noise:** payload patterns vary widely; limited datasets can lead to false positives/negatives.
+- **Consistency of preprocessing:** payload cleaning must match training-time preprocessing to keep predictions stable.
+- **Security and access control:** backend routes require JWT-based authentication to protect scan and alert data.
+- **Deployment complexity:** coordinating multiple services (frontend, backend, ML) with correct environment variables.
 
-## Objectives
+## 5. Problem Statement
+Security analysts need to rapidly identify malicious payloads, triage true threats, and prioritize remediation without excessive manual effort. Traditional vulnerability scanners are often slow, noisy, and difficult to integrate into modern dashboards and workflows. A robust solution must combine (1) **authenticated scan orchestration**, (2) **ML-based payload classification**, (3) **risk/severity scoring**, (4) **persistent storage**, and (5) **real-time alert delivery**.
 
-- Build an interactive cybersecurity dashboard
-- Enable real-time scanning and alert delivery
-- Leverage machine learning to classify web attack payloads
-- Measure risk using severity and scoring
-- Provide report generation and actionable insights
+DataShield addresses this by providing an end-to-end platform where scans are submitted from a dashboard, payloads are classified by a dedicated ML service, alerts are scored and persisted, and analysts receive immediate updates.
 
-## Literature Review Summary
+### Figure 5.1: Overall System Architecture of DataShield AI
+**Architecture:** Frontend (React) —(REST APIs / WebSocket)→ Backend (Node.js/Express.js) —(ML Prediction API)→ Python/Flask ML Service; Backend ↔ MongoDB Atlas; Backend —(Socket.IO)→ Frontend
 
-Recent research emphasizes the effectiveness of machine learning for web vulnerability detection. Random Forest and TF-IDF are widely used in security classification due to their balance of performance and interpretability. Real-time alerting with WebSockets improves incident response by reducing detection latency.
+### Figure 5.2: Frontend Architecture
+**Structure:** Central Router <-> (Dashboard, Scan Module, Alert Module, Analytics Module) -> Backend API
 
-## Methodology
+### Figure 5.3: Backend Architecture
+**Express Server:** API Routing | Authentication | Scan Management -> (MongoDB Atlas, Flask ML Service)
 
-The system is implemented as a microservices architecture:
-- Frontend: React and Vite for an interactive user experience
-- Backend: Node.js and Express for API orchestration and authentication
-- ML Service: Python Flask serving a Random Forest model
-- Database: MongoDB Atlas for persistent scan and alert storage
-- Real-time communication: Socket.IO for live notifications
+### Figure 5.4: Machine Learning Pipeline
+**Flow:** Raw Payload Input -> Text Preprocessing -> TF-IDF Vectorization -> Random Forest Classifier -> Prediction + Confidence Score Output
 
-## System Architecture
+### Figure 5.5: Database Design (MongoDB Atlas Collections)
+**Schema:** Users(userId, name, email) | Scans(scanId, targetURL, findings[]) | Alerts(alertId, severity, riskScore)
 
-The architecture connects user interactions in the dashboard to backend APIs and ML inference. Scans are submitted through the frontend, processed by the backend, and sent to the ML service for classification. Alerts are generated and propagated in real-time through Socket.IO.
+### Figure 5.6: System Workflow
+**Workflow:** User Login -> Scan Submission -> Scanner Injection -> ML Classification -> Risk Score Calculation -> DB Persistence -> Socket.IO Broadcast -> Dashboard Update
 
-## Technologies Used
+### Figure 5.7: Use Case Diagram
+**Use Cases:** Actors(Security Analyst, Admin) -> (Login, Create Scan, View Alerts, View Analytics, Generate Reports, Manage Users)
 
-- React, Tailwind CSS, Recharts, Socket.IO Client
-- Node.js, Express, JWT, Socket.IO, MongoDB Atlas
-- Flask, Scikit-learn, Random Forest, TF-IDF
+### Figure 5.8: Data Flow Diagram
+**Level 1 DFD:** User Interaction/Orchestration <-> Scanning <-> ML Classification <-> Reporting/Persistence
 
-## Implementation
+### Figure 5.9: Sequence Diagram
+**Sequence:** User -> Frontend -> Backend -> ML Service -> Database -> Backend -> Frontend (Socket.IO)
 
-The implementation includes:
-- Authenticated user access with JWT
-- Scan submission and persistence in MongoDB Atlas
-- ML payload classification via a Flask endpoint
-- Alert generation with severity and risk scoring
-- Real-time notifications for new scans and alerts
-- PDF report generation client-side using jsPDF and html2canvas
-- Dashboard analytics with charts and summary metrics
 
-## Results
 
-DataShield demonstrates a working end-to-end workflow:
-- Scans are created and analyzed automatically
-- ML service identifies threat payloads
-- Alerts are generated and scored
-- Dashboard updates in real-time via Socket.IO
-- Professional security reports can be exported as PDF
+## 6. Proposed Model
 
-## Future Scope
+### Figure 6.2: ML Data Transformation Workflow
+**Pipeline:** Raw Payload -> Preprocessing -> TF-IDF Vectorization -> Random Forest Classifier -> Prediction + Confidence Score
 
-- Add role-based access control and audit logging
-- Expand ML models for additional vulnerability categories
-- Integrate external notification channels
-- Add automated remediation workflow suggestions
-- Implement advanced threat correlation and trend analysis
 
-## Conclusion
+### 6.1 System model (microservices)
 
-DataShield proves that a modern cybersecurity platform can combine real-time visibility, machine learning classification, and interactive reporting to improve threat detection. The system provides a solid foundation for future expansion into more advanced security operations and automation.
+- **Frontend (React + Vite):** user interface for scan submission, visualization, and report export.
+- **Backend (Node.js + Express + Socket.IO):** JWT-authenticated API for managing scans/alerts; broadcasts real-time events; stores data in MongoDB.
+- **ML Service (Flask + scikit-learn):** TF-IDF vectorization + Random Forest inference.
+- **Database (MongoDB Atlas):** persistence for users, scans, and alerts.
+
+### 6.2 ML model (payload classification)
+- Input: raw payload string.
+- Preprocessing: cleans payload text using a shared preprocessing function.
+- Feature extraction: TF-IDF vectorization using a trained vectorizer.
+- Classifier: `RandomForestClassifier` predicts a label (attack type class) and provides class probabilities.
+- Output: prediction label + confidence score (max probability).
+
+### Figure 6.4: Real-Time Dashboard Interface
+**Layout:** Header | Summary Cards | Pie Chart (Severity) | Real-time Alert Feed
+
+## 7. Implementation
+### Figure 7.3: System Latency Distribution
+**Real-Time Update:** Backend Trigger -> Socket.IO Broadcast -> Frontend UI (Instant Alert Display)
+
+### Figure 7.4: Scanning Throughput vs. Depth
+**Database Diagram:** Users, Scans, Alerts Collections with Findings Nested in Scans
+
+### 7.1 Backend implementation
+
+- Express app mounts routes under `/api`:
+  - `/api/auth/*` for register/login/me
+  - `/api/scans/*` for scan creation and retrieval
+  - `/api/alerts/*` for alert creation/listing
+  - `/api/health` for backend health checks
+- MongoDB connection is established via `MONGODB_URI` (or `MONGO_URI`) in `backend/config/db.js`.
+- ML inference is invoked from `backend/services/mlService.js` using `ML_API_URL` (default: `http://127.0.0.1:8000/predict`).
+- Real-time events are supported via Socket.IO on the same HTTP server created in `backend/server.js`.
+
+### 7.2 ML service implementation
+- `GET /health` returns service status and whether model artifacts are loaded.
+- `POST /predict` accepts `{ "payload": "..." }` and returns `{ prediction, confidence }`.
+- Model artifacts are loaded at startup from `ml-service/model/`.
+- Training is performed by `train_model.py`, which saves:
+  - `threat_model.pkl`
+  - `vectorizer.pkl`
+
+### 7.3 Frontend implementation
+- Axios API client reads token from `localStorage` and adds the JWT in `Authorization: Bearer <token>`.
+- Dashboard loads metrics and lists and subscribes to Socket.IO events (`alertCreated`, `scanCreated`) to refresh UI in real time.
+- Analytics are rendered using charts (severity distribution, attack type frequency, scan trends).
+
+### Figure 7.5: Risk Score Heatmap
+**Report Structure:** Header/Summary -> Risk Assessment Chart -> Findings Table (Payload, Prediction, Risk)
+
+## 8. Results & Analysis
+
+Once the services are running (frontend, backend, and ML service), DataShield supports an end-to-end workflow:
+- Users authenticate using JWT.
+- Users submit scan requests through the dashboard.
+- Backend persists scan details and calls the ML service for payload classification.
+- Backend generates alerts from predictions and computes severity/risk signals.
+- The dashboard updates automatically via Socket.IO without manual refresh.
+
+The practical outcome is improved operator efficiency: high-severity alerts and risk metrics are visible immediately, and analytics help analysts understand attack patterns.
+
+## 9. Future Scope
+- Expand ML models to cover more vulnerability categories and improve dataset diversity.
+- Add role-based access control (RBAC) and detailed audit logs for security events.
+- Implement model monitoring and periodic retraining.
+- Add automated remediation guidance and prioritization explanations.
+- Improve cross-scan correlation for threat campaign detection.
+
+## 10. Conclusion
+DataShield provides a complete, modular cybersecurity platform integrating authenticated scan orchestration, ML-based payload classification, risk/severity scoring, MongoDB persistence, and real-time analyst visibility. The microservices separation (backend vs. ML service) enables independent scaling and simplified maintenance, while the React dashboard delivers operationally useful analytics and immediate alert updates.
+
+## 11. References
+- Project documentation within repository:
+  - `API_DOCUMENTATION.md`
+  - `DEPLOYMENT_GUIDE.md`
+- scikit-learn model pipeline concepts:
+  - TF-IDF vectorization
+  - Random Forest classification
+- Socket.IO concept for real-time web applications
+

@@ -56,3 +56,5 @@ const predictPayloadThreat = async (payload) => {
 export default {
   predictPayloadThreat,
 };
+
+
