@@ -1,0 +1,82 @@
+path traversal etc passwd
+windows system32 path traversal
+powershell encoded command
+jndi ldap exploit
+wget malicious shell download
+curl attacker payload
+nmap service scan
+chmod backdoor file
+bash reverse shell tcp
+path traversal etc shadow
+windows win ini traversal
+url encoded path traversal
+double encoded traversal
+php filter base64 encode
+file protocol local read
+ls la command injection
+pipe id injection
+cat etc passwd injection
+backtick id injection
+dollar paren id injection
+ping attacker command injection
+template injection 7 times 7
+jinja2 config dump
+spring el runtime exec
+jndi dns attacker
+jndi rmi attacker exploit
+powershell hidden noprofile
+net user add hacker
+certutil download shell
+mshta payload execution
+wmic process create
+php system get cmd
+php exec request cmd
+jinja2 class mro subclasses
+python os system import
+bin sh c id
+cat proc version
+uname a info
+netstat an ports
+ps aux processes
+net user domain enum
+systeminfo recon
+whoami priv
+file windows win ini
+ifs cat passwd bypass
+java runtime exec
+aws metadata ssrf
+proc self environ lfi
+vbscript msgbox
+ping loopback
+nc lvp listener
+python http server
+php passthru cmd
+ssrf internal scan
+xxe injection
+open redirect evil
+host header injection
+crlf header split
+null byte injection
+prototype pollution
+deserialization gadget
+object reference insecure
+directory listing
+backup file disclosure
+source code git disclosure
+default credentials admin
+brute force login
+credential stuffing
+path traversal hosts
+web inf web xml
+ldap injection
+gopher ssrf
+dict memcached ssrf
+curl pipe bash
+ls cron jobs
+cat os release
+ipconfig all
+dir users windows
+echo computername
+reg query hklm
+tasklist svc
+net view domain
