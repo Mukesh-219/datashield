@@ -13,11 +13,13 @@ DataShield is an AI-powered web application security platform designed to detect
 - Support report generation via client-side PDF export.
 
 ## 3. Literature Survey (Consolidated)
-Machine learning approaches to web vulnerability and payload classification commonly leverage **text representation** and **supervised classifiers**. A typical effective pipeline uses **TF-IDF (with n-grams)** to vectorize payload text, followed by classifiers such as **Random Forest** due to its strong baseline performance and robustness on non-linear decision boundaries. 
+Machine learning approaches to web vulnerability and payload classification commonly leverage **text representation** and **supervised classifiers**. A typical effective pipeline uses **TF-IDF (with character n-grams)** to vectorize payload text, followed by classifiers such as **Random Forest** due to its strong baseline performance and robustness on non-linear decision boundaries. Character-level n-grams are particularly effective for security payloads because they capture attack tokens (e.g., `OR`, `SELECT`, `onerror=`) regardless of spacing, casing, or obfuscation.
+
+For network-level threat detection, the **CICIDS2017** benchmark dataset provides labeled network flow records covering DDoS, PortScan, BruteForce, DoS, and web attack classes. Feature-based classifiers on flow statistics (packet lengths, inter-arrival times, flag counts) achieve near-perfect separation between benign and attack traffic.
 
 For operational security workflows, research and industry practice increasingly emphasize **low-latency visibility** and **automation**. Real-time communication mechanisms such as WebSockets (and Socket.IO) reduce the time between detection and human review, improving incident response efficiency.
 
-DataShield consolidates these ideas into a microservices design: the backend orchestrates authenticated operations and persistence, while the ML service performs TF-IDF + Random Forest inference.
+DataShield consolidates these ideas into a microservices design: the backend orchestrates authenticated operations and persistence, while the ML service exposes two models — a payload text classifier and a network flow classifier.
 
 ## 4. Research Challenges
 - **Model readiness at runtime:** the ML service must load model artifacts (model + vectorizer) before serving predictions.
@@ -33,64 +35,49 @@ Security analysts need to rapidly identify malicious payloads, triage true threa
 DataShield addresses this by providing an end-to-end platform where scans are submitted from a dashboard, payloads are classified by a dedicated ML service, alerts are scored and persisted, and analysts receive immediate updates.
 
 ### Figure 5.1: Overall System Architecture of DataShield AI
-**Architecture:** Frontend (React) —(REST APIs / WebSocket)→ Backend (Node.js/Express.js) —(ML Prediction API)→ Python/Flask ML Service; Backend ↔ MongoDB Atlas; Backend —(Socket.IO)→ Frontend
 
-### Figure 5.2: Frontend Architecture
-**Structure:** Central Router <-> (Dashboard, Scan Module, Alert Module, Analytics Module) -> Backend API
-
-### Figure 5.3: Backend Architecture
-**Express Server:** API Routing | Authentication | Scan Management -> (MongoDB Atlas, Flask ML Service)
-
-### Figure 5.4: Machine Learning Pipeline
-**Flow:** Raw Payload Input -> Text Preprocessing -> TF-IDF Vectorization -> Random Forest Classifier -> Prediction + Confidence Score Output
-
-### Figure 5.5: Database Design (MongoDB Atlas Collections)
-**Schema:** Users(userId, name, email) | Scans(scanId, targetURL, findings[]) | Alerts(alertId, severity, riskScore)
-
-### Figure 5.6: System Workflow
-**Workflow:** User Login -> Scan Submission -> Scanner Injection -> ML Classification -> Risk Score Calculation -> DB Persistence -> Socket.IO Broadcast -> Dashboard Update
-
-### Figure 5.7: Use Case Diagram
-**Use Cases:** Actors(Security Analyst, Admin) -> (Login, Create Scan, View Alerts, View Analytics, Generate Reports, Manage Users)
-
-### Figure 5.8: Data Flow Diagram
-**Level 1 DFD:** User Interaction/Orchestration <-> Scanning <-> ML Classification <-> Reporting/Persistence
-
-### Figure 5.9: Sequence Diagram
-**Sequence:** User -> Frontend -> Backend -> ML Service -> Database -> Backend -> Frontend (Socket.IO)
+Frontend (React + Vite)   <---->   Backend (Node + Express)   <---->   ML Service (Python + Flask)
+         │                             │                            │
+         │ Socket.IO / REST API        │ ML inference / persistence  │
+         │                             │                            │
+         └─────────────────────────────┴────────────────────────────┘
+                                    │
+                                    ▼
+                              MongoDB Atlas
 
 
 
 ## 6. Proposed Model
 
-### Figure 6.2: ML Data Transformation Workflow
-**Pipeline:** Raw Payload -> Preprocessing -> TF-IDF Vectorization -> Random Forest Classifier -> Prediction + Confidence Score
-
-
 ### 6.1 System model (microservices)
 
 - **Frontend (React + Vite):** user interface for scan submission, visualization, and report export.
 - **Backend (Node.js + Express + Socket.IO):** JWT-authenticated API for managing scans/alerts; broadcasts real-time events; stores data in MongoDB.
-- **ML Service (Flask + scikit-learn):** TF-IDF vectorization + Random Forest inference.
+- **ML Service (Flask + scikit-learn):** two independent models — payload text classifier and network flow classifier.
 - **Database (MongoDB Atlas):** persistence for users, scans, and alerts.
 
-### 6.2 ML model (payload classification)
-- Input: raw payload string.
-- Preprocessing: cleans payload text using a shared preprocessing function.
-- Feature extraction: TF-IDF vectorization using a trained vectorizer.
-- Classifier: `RandomForestClassifier` predicts a label (attack type class) and provides class probabilities.
-- Output: prediction label + confidence score (max probability).
+### 6.2 Payload Text Classifier
 
-### Figure 6.4: Real-Time Dashboard Interface
-**Layout:** Header | Summary Cards | Pie Chart (Severity) | Real-time Alert Feed
+- **Algorithm:** Random Forest (300 estimators, balanced class weights)
+- **Vectorizer:** TF-IDF with character n-grams (`analyzer=char_wb`, `ngram_range=(2,5)`, `max_features=60,000`, `sublinear_tf=True`)
+- **Classes:** Normal, SQLi, XSS, Suspicious
+- **Training data:** 52,322 balanced samples drawn from 90,042 unique real-world payloads
+
+| Source | Type | Samples |
+|---|---|---|
+| Kaggle `sqli.csv` + `sqliv2.csv` + `SQLiV3.csv` | SQLi + Normal | ~48,000 |
+| Kaggle `XSS_dataset.csv` | XSS + Normal | ~13,700 |
+| SecLists Fuzzing (LFI, SSTI, SSI) | Suspicious | ~1,014 |
+| PayloadsAllTheThings (LFI, SSTI, dir traversal, cmd injection) | Suspicious | ~22,500 |
+
+### 6.3 Network Flow Classifier
+
+- **Algorithm:** Random Forest (200 estimators, balanced class weights, StandardScaler)
+- **Features:** 78 numeric flow statistics (packet lengths, IAT, flag counts, window sizes, etc.)
+- **Classes:** BENIGN, DDoS, DoS, PortScan, BruteForce, Bot, SQLi, Infiltration, Heartbleed
+- **Training data:** CICIDS2017 dataset (2.3M records, balanced to 5,000 per class)
 
 ## 7. Implementation
-### Figure 7.3: System Latency Distribution
-**Real-Time Update:** Backend Trigger -> Socket.IO Broadcast -> Frontend UI (Instant Alert Display)
-
-### Figure 7.4: Scanning Throughput vs. Depth
-**Database Diagram:** Users, Scans, Alerts Collections with Findings Nested in Scans
-
 ### 7.1 Backend implementation
 
 - Express app mounts routes under `/api`:
@@ -103,31 +90,93 @@ DataShield addresses this by providing an end-to-end platform where scans are su
 - Real-time events are supported via Socket.IO on the same HTTP server created in `backend/server.js`.
 
 ### 7.2 ML service implementation
-- `GET /health` returns service status and whether model artifacts are loaded.
-- `POST /predict` accepts `{ "payload": "..." }` and returns `{ prediction, confidence }`.
-- Model artifacts are loaded at startup from `ml-service/model/`.
-- Training is performed by `train_model.py`, which saves:
-  - `threat_model.pkl`
-  - `vectorizer.pkl`
+- `GET /health` returns service status and whether both model artifacts are loaded.
+- `POST /predict` accepts `{ "payload": "..." }` and returns `{ prediction, confidence }` for payload text classification.
+- `POST /predict/network` accepts 78 numeric flow features and returns `{ prediction, confidence, classProbabilities }` for network threat classification.
+- Payload model artifacts loaded at startup from `ml-service/model/threat_model.pkl` and `vectorizer.pkl`.
+- Network model artifacts: `network_model.pkl`, `network_scaler.pkl`, `network_features.pkl`, `network_label_encoder.pkl`.
+- Training scripts:
+  - `train_model.py` — payload text classifier using `data/sample_dataset.csv`
+  - `train_network_model.py` — network flow classifier using CICIDS2017 files
+  - `build_and_train.py` — merges all Kaggle datasets and retrains payload model
+  - `patt_retrain.py` — downloads PayloadsAllTheThings + SecLists payloads and retrains
 
 ### 7.3 Frontend implementation
 - Axios API client reads token from `localStorage` and adds the JWT in `Authorization: Bearer <token>`.
 - Dashboard loads metrics and lists and subscribes to Socket.IO events (`alertCreated`, `scanCreated`) to refresh UI in real time.
 - Analytics are rendered using charts (severity distribution, attack type frequency, scan trends).
 
-### Figure 7.5: Risk Score Heatmap
-**Report Structure:** Header/Summary -> Risk Assessment Chart -> Findings Table (Payload, Prediction, Risk)
 
 ## 8. Results & Analysis
 
-Once the services are running (frontend, backend, and ML service), DataShield supports an end-to-end workflow:
-- Users authenticate using JWT.
-- Users submit scan requests through the dashboard.
-- Backend persists scan details and calls the ML service for payload classification.
-- Backend generates alerts from predictions and computes severity/risk signals.
-- The dashboard updates automatically via Socket.IO without manual refresh.
+### 8.1 Payload Text Classifier
 
-The practical outcome is improved operator efficiency: high-severity alerts and risk metrics are visible immediately, and analytics help analysts understand attack patterns.
+Trained on 52,322 balanced samples from 90,042 unique real-world payloads sourced from Kaggle, SecLists, and PayloadsAllTheThings.
+
+**5-Fold Cross-Validation Accuracy: 99.74% ± 0.04%**
+**Hold-out Test Accuracy: 99.66%**
+
+#### Per-Class Metrics
+
+| Class | Precision | Recall | F1 Score | Support |
+|---|---|---|---|---|
+| Normal | 0.9894 | 0.9993 | 0.9944 | 3,000 |
+| SQLi | 0.9993 | 0.9933 | 0.9963 | 3,000 |
+| Suspicious | 0.9993 | 0.9977 | 0.9985 | 3,000 |
+| XSS | 1.0000 | 0.9952 | 0.9976 | 1,465 |
+| **Macro avg** | **0.9974** | **0.9964** | **0.9967** | **10,465** |
+
+#### Confusion Matrix
+
+| | Pred: Normal | Pred: SQLi | Pred: Suspicious | Pred: XSS |
+|---|---|---|---|---|
+| **Act: Normal** | 2998 | 1 | 1 | 0 |
+| **Act: SQLi** | 20 | 2980 | 0 | 0 |
+| **Act: Suspicious** | 6 | 1 | 2993 | 0 |
+| **Act: XSS** | 6 | 0 | 1 | 1458 |
+
+Key observations:
+- SQLi, XSS, and Suspicious misclassifications go exclusively to Normal — never cross-contaminate each other.
+- Zero false positives on XSS (precision = 1.0000).
+- Character n-gram TF-IDF is highly effective at capturing obfuscated attack patterns.
+
+#### Model Progression
+
+| Stage | Dataset Size | Accuracy | Suspicious Recall | Macro F1 |
+|---|---|---|---|---|
+| Initial prototype | 40 samples | 40.00% | N/A | N/A |
+| + Kaggle datasets | 37,404 | 99.64% | 12.5% | 0.8038 |
+| + SecLists | 38,336 | 99.58% | 99.51% | 0.9964 |
+| **+ PayloadsAllTheThings** | **52,322** | **99.66%** | **99.77%** | **0.9967** |
+
+### 8.2 Network Flow Classifier
+
+Trained on CICIDS2017 with 2.3M records balanced to 28,510 samples across 9 attack classes.
+
+**Hold-out Accuracy: 99.00%**
+
+| Class | Precision | Recall | F1 |
+|---|---|---|---|
+| BENIGN | 0.99 | 0.99 | 0.99 |
+| BruteForce | 1.00 | 0.96 | 0.98 |
+| DDoS | 1.00 | 1.00 | 1.00 |
+| DoS | 1.00 | 1.00 | 1.00 |
+| PortScan | 1.00 | 1.00 | 1.00 |
+| Bot | 0.99 | 1.00 | 0.99 |
+| SQLi | 0.88 | 0.99 | 0.93 |
+| Infiltration | 1.00 | 1.00 | 1.00 |
+| Heartbleed | 1.00 | 1.00 | 1.00 |
+
+Top predictive features: Destination Port, Init_Win_bytes_backward, Bwd Packet Length Mean, Average Packet Size.
+
+### 8.3 End-to-End System Validation
+
+Full stack smoke test (16/16 endpoints pass):
+- ML service health: both models loaded
+- `POST /predict` correctly classifies SQLi (97% confidence), XSS (98%), Normal (98%)
+- Backend creates alerts only for threat predictions — Normal scans produce zero alerts
+- Real-time Socket.IO events deliver alerts to dashboard without page refresh
+- JWT authentication protects all scan and alert routes
 
 ## 9. Future Scope
 - Expand ML models to cover more vulnerability categories and improve dataset diversity.
@@ -137,14 +186,18 @@ The practical outcome is improved operator efficiency: high-severity alerts and 
 - Improve cross-scan correlation for threat campaign detection.
 
 ## 10. Conclusion
-DataShield provides a complete, modular cybersecurity platform integrating authenticated scan orchestration, ML-based payload classification, risk/severity scoring, MongoDB persistence, and real-time analyst visibility. The microservices separation (backend vs. ML service) enables independent scaling and simplified maintenance, while the React dashboard delivers operationally useful analytics and immediate alert updates.
+DataShield provides a complete, modular cybersecurity platform integrating authenticated scan orchestration, dual ML-based threat classification, risk/severity scoring, MongoDB persistence, and real-time analyst visibility. The payload classifier achieves **99.66% accuracy** across four classes (Normal, SQLi, XSS, Suspicious) trained on 90,042 real-world payloads from Kaggle, SecLists, and PayloadsAllTheThings. The network flow classifier achieves **99.00% accuracy** on the CICIDS2017 benchmark across 9 attack classes. The microservices separation (backend vs. ML service) enables independent scaling and simplified maintenance, while the React dashboard delivers operationally useful analytics and immediate alert updates.
 
 ## 11. References
-- Project documentation within repository:
-  - `API_DOCUMENTATION.md`
-  - `DEPLOYMENT_GUIDE.md`
-- scikit-learn model pipeline concepts:
-  - TF-IDF vectorization
-  - Random Forest classification
-- Socket.IO concept for real-time web applications
+- Kaggle datasets:
+  - SQL Injection Dataset — syedsaqlainhussain
+  - SQL Injection Dataset v2 — syedsaqlainhussain
+  - SQL Injection Dataset v3
+  - XSS Dataset for Deep Learning — syedsaqlainhussain
+- SecLists by Daniel Miessler — https://github.com/danielmiessler/SecLists
+- PayloadsAllTheThings by swisskyrepo — https://github.com/swisskyrepo/PayloadsAllTheThings
+- CICIDS2017 — Canadian Institute for Cybersecurity Intrusion Detection Evaluation Dataset
+- scikit-learn: TF-IDF vectorization, Random Forest classification
+- Socket.IO: real-time bidirectional event-based communication
+- Project documentation: `API_DOCUMENTATION.md`, `DEPLOYMENT_GUIDE.md`
 
